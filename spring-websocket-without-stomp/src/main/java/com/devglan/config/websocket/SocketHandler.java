@@ -71,7 +71,7 @@ public class SocketHandler extends TextWebSocketHandler {
   
         sessions.put(session.getId(), session);
         logger.info("session count " + sessions.size());
-		sendMessageToAll();
+		sendMessageToAll(session.getId());
     }
     
 //    @Async
@@ -102,16 +102,16 @@ public class SocketHandler extends TextWebSocketHandler {
 	@RequestMapping("/command")
 	public String createCommand() throws InterruptedException {
 		System.out.println(Thread.currentThread().getName());
-		sendMessageToAll();
+		sendMessageToAll("rest");
 		return "Command created";
 	}
     
 	@Async
-    public void sendMessageToAll() {
+    public void sendMessageToAll(String sessionID) {
         sessions.forEach((key, value) -> {
             try {     
      			Thread.sleep(2000);
-     			String message = "Client " + key + " got connected";
+     			String message = "Client " + sessionID + " got connected";
      	        TextMessage textMessage = new TextMessage(message);
      	        value.sendMessage(textMessage);
             } catch (IOException e) {
