@@ -20,7 +20,5 @@ public class StompWebSocketConfig implements WebSocketConfigurer {
     
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(new SocketHandler(), "/name");
-        registry.addHandler(new ProtocolBufferSocketHandler(), "/protobuf");
-        registry.addHandler(new BinarySocketHandler(), "/binary");
     }
 }
