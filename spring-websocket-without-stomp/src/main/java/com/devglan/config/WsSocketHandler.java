@@ -3,17 +3,6 @@ package com.devglan.config;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.messaging.simp.user.SimpUserRegistry;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -24,14 +13,28 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+
+import com.impossibl.postgres.api.jdbc.PGConnection;
+import com.impossibl.postgres.api.jdbc.PGNotificationListener;
+import com.impossibl.postgres.jdbc.PGDataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import javax.sql.DataSource;
+import java.sql.Statement;
 
 @Component
 @RestController
 public class WsSocketHandler extends TextWebSocketHandler {
-	
 	private Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 	
     private static final Logger logger = LoggerFactory.getLogger(WsSocketHandler.class);
@@ -48,15 +51,42 @@ public class WsSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         InetSocketAddress clientAddress = session.getRemoteAddress();
-        HttpHeaders handshakeHeaders = session.getHandshakeHeaders();
         logger.info("Accepted connection from: {}:{}", clientAddress.getHostString(), clientAddress.getPort());
         logger.info("Session id: {}", session.getId());
         sessions.put(session.getId(), session);
         logger.info("session count " + sessions.size());
 
         Connection lConn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/asimily","postgres","postgres");
-		Listener listener = new Listener(lConn, session);
+		Listener listener = new Listener(lConn, session, sessions.size());
         listener.start();
+        
+//        PGDataSource dataSource = new PGDataSource();
+//        dataSource.setHost("localhost");
+//        dataSource.setPort(5432);
+//        dataSource.setDatabase("asimily");
+//        dataSource.setUser("postgres");
+//        dataSource.setPassword("postgres");
+//        
+//        PGNotificationListener listener = (int processId, String channelName, String payload) 
+//                -> {
+//					try {
+//				    	TextMessage textMessage = new TextMessage("Got notification");
+//						session.sendMessage(textMessage);
+//					} catch (IOException e1) {
+//						// TODO Auto-generated catch block
+//						e1.printStackTrace();
+//					}
+//				};
+//
+//				logger.info("connect");
+//            try (PGConnection connection = (PGConnection) dataSource.getConnection()){
+//                Statement statement = connection.createStatement();
+//                statement.execute("LISTEN command");
+//                statement.close();
+//                connection.addNotificationListener(listener);
+//            } catch (Exception e) {
+//                System.err.println(e);
+//            }
     }
     
     @Override

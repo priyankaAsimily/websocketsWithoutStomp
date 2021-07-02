@@ -13,19 +13,20 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class DsController {
 	
 	@RequestMapping("/command")
-	public String createCommand() throws InterruptedException {
+	public String createCommand(@RequestParam String id) throws InterruptedException {
 		System.out.println(Thread.currentThread().getName());
         try
         {
         	Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/asimily","postgres","postgres");
             Statement stmt = conn.createStatement();
-            stmt.execute("NOTIFY command");
+            stmt.execute("NOTIFY " + id);
             stmt.close();
         }
         catch (SQLException sqle)

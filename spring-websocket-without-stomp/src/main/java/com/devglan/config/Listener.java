@@ -16,13 +16,13 @@ class Listener extends Thread
     private PGConnection pgconn;
     private WebSocketSession session;
 
-    Listener(Connection conn, WebSocketSession sessionID) throws SQLException
+    Listener(Connection conn, WebSocketSession sessionID, Integer channel) throws SQLException
     {
         this.conn = conn;
         session = sessionID;
         this.pgconn = conn.unwrap(PGConnection.class);
         Statement stmt = conn.createStatement();
-        stmt.execute("LISTEN command");
+        stmt.execute("LISTEN " + channel);
         stmt.close();
     }
 
