@@ -22,7 +22,7 @@ class Listener extends Thread
         session = sessionID;
         this.pgconn = conn.unwrap(PGConnection.class);
         Statement stmt = conn.createStatement();
-        stmt.execute("LISTEN " + channel);
+        stmt.execute("LISTEN a" + channel);
         stmt.close();
     }
 

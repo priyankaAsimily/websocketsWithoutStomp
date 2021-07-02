@@ -26,7 +26,7 @@ public class DsController {
         {
         	Connection conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/asimily","postgres","postgres");
             Statement stmt = conn.createStatement();
-            stmt.execute("NOTIFY " + id);
+            stmt.execute("NOTIFY a" + id);
             stmt.close();
         }
         catch (SQLException sqle)
