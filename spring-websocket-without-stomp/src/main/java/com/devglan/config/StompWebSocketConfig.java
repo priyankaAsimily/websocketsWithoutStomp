@@ -1,8 +1,5 @@
-package com.devglan.config.config;
+package com.devglan.config;
 
-import com.devglan.config.websocket.BinarySocketHandler;
-import com.devglan.config.websocket.ProtocolBufferSocketHandler;
-import com.devglan.config.websocket.SocketHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +16,6 @@ public class StompWebSocketConfig implements WebSocketConfigurer {
     private static final Logger logger = LoggerFactory.getLogger(StompWebSocketConfig.class);
     
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new SocketHandler(), "/name");
+        registry.addHandler(new WsSocketHandler(), "/name");
     }
 }

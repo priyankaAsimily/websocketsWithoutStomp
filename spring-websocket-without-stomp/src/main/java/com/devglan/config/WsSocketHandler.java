@@ -1,6 +1,5 @@
-package com.devglan.config.websocket;
+package com.devglan.config;
 
-import com.devglan.config.WebsocketService;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +17,10 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +30,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 @RestController
-public class SocketHandler extends TextWebSocketHandler {
-
-	@Autowired
-	private WebsocketService wb;
+public class WsSocketHandler extends TextWebSocketHandler {
 	
 	private Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 	
-    private static final Logger logger = LoggerFactory.getLogger(SocketHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(WsSocketHandler.class);
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws InterruptedException, IOException {
@@ -49,48 +49,15 @@ public class SocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         InetSocketAddress clientAddress = session.getRemoteAddress();
         HttpHeaders handshakeHeaders = session.getHandshakeHeaders();
-
-        //the messages will be broadcasted to all users.
         logger.info("Accepted connection from: {}:{}", clientAddress.getHostString(), clientAddress.getPort());
-//        logger.info("Client hostname: {}", clientAddress.getHostName());
-//        logger.info("Client ip: {}", clientAddress.getAddress().getHostAddress());
-//        logger.info("Client port: {}", clientAddress.getPort());
-//
-//        logger.info("Session accepted protocols: {}", session.getAcceptedProtocol());
-//        logger.info("Session binary message size limit: {}", session.getBinaryMessageSizeLimit());
         logger.info("Session id: {}", session.getId());
-//        logger.info("Session text message size limit: {}", session.getTextMessageSizeLimit());
-//        logger.info("Session uri: {}", session.getUri().toString());
-//
-//        logger.info("Handshake header: Accept {}", handshakeHeaders.toString());
-//        logger.info("Handshake header: User-Agent {}", handshakeHeaders.get("User-Agent").toString());
-//        logger.info("Handshake header: Sec-WebSocket-Extensions {}", handshakeHeaders.get("Sec-WebSocket-Extensions").toString());
-//        logger.info("Handshake header: Sec-WebSocket-Key {}", handshakeHeaders.get("Sec-WebSocket-Key").toString());
-//        logger.info("Handshake header: Sec-WebSocket-Version {}", handshakeHeaders.get("Sec-WebSocket-Version").toString());
-
-  
         sessions.put(session.getId(), session);
         logger.info("session count " + sessions.size());
-		sendMessageToAll(session.getId());
+
+        Connection lConn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/asimily","postgres","postgres");
+		Listener listener = new Listener(lConn, session);
+        listener.start();
     }
-    
-//    @Async
-//    public CompletableFuture<Boolean> sendMessage(WebSocketSession session) {
-//        Boolean res = false;
-//        long start = System.currentTimeMillis();
-//        logger.info("start time: " + start);
-//    	try {
-//			res = true;
-//			Thread.sleep(2000);
-//			sendMessageToAll("New client got connected");
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//    	logger.info("Elapsed time: " + (System.currentTimeMillis() - start));
-//        logger.info("Thread name: " + Thread.currentThread());
-//        return CompletableFuture.completedFuture(res);
-//    }
     
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
@@ -99,20 +66,13 @@ public class SocketHandler extends TextWebSocketHandler {
         super.afterConnectionClosed(session, status);
     }
     
-	@RequestMapping("/command")
-	public String createCommand() throws InterruptedException {
-		System.out.println(Thread.currentThread().getName());
-		sendMessageToAll("rest");
-		return "Command created";
-	}
-    
+
 	@Async
     public void sendMessageToAll(String sessionID) {
         sessions.forEach((key, value) -> {
             try {     
      			Thread.sleep(2000);
-     			String message = "Client " + sessionID + " got connected";
-     	        TextMessage textMessage = new TextMessage(message);
+     	        TextMessage textMessage = new TextMessage("Client  got connected");
      	        value.sendMessage(textMessage);
             } catch (IOException e) {
                 e.printStackTrace();
